@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+  <title>Blythe 인형</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'Stylish', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .wrap {
+      margin: auto;
+      width: 600px;
+    }
+
+    .comment {
+      font-weight: bold;
+      color: blue;
+    }
+
+    .input_body {
+      margin: auto;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 650px;
+    }
+
+    .order-box {
+      width: 650px;
+      text-align: center;
+    }
+
+    .orders {
+      margin-top: 50px;
+    }
+
+    .card-img {
+      background-image: url('https://i.pinimg.com/736x/f2/55/98/f2559824c5d16c175c295bdce6d9817e.jpg');
+      background-position: center;
+      background-color: cover;
+      margin: auto;
+      width: 600px;
+      height: 600px;
+    }
+  </style>
+  <script>
+
+    $(document).ready(function () {
+      $.ajax({
+        type: "GET",
+        url: "https://api.manana.kr/exchange/rate.json",
+        data: {},
+        success: function (response) {
+          let currencyAPI = response[1]['rate']
+          $('#currency').append(currencyAPI)
+        }
+      });
+      $('#orders-box').html('');
+      listing();
+    })
+
+    function isCelluar(asValue) {
+      var regExp = /^01(?:0|1|[6-9])-(?:\d{3}|\d{4})-\d{4}$/;
+      return regExp.test(asValue);
+    }
+
+    function orderItem() {
+      let orderName = $('#orderName').val();
+      let orderSelect = $('#inputGroupSelect01').val();
+      let orderAddress = $('#orderAddress').val();
+      let orderPhone = $('#orderPhone').val();
+      if (orderName == '') {
+        alert('성함을 알려주시겠어요');
+        $('#orderName').focus();
+        return;
+      } else if (orderSelect == '') {
+        alert('몇 개 사시겠어요');
+        $('#orderSelect').focus();
+        return;
+      } else if (orderAddress == '') {
+        alert('주소 알려주세요');
+        $('#orderAddress').focus();
+        return;
+      } else if (orderPhone == '') {
+        alert('전화번호도 알려주세요');
+        $('#orderPhone').focus();
+        return;
+      } else if (isCelluar(orderPhone) != true) {
+        alert('010-XXXX-XXXX 형식으로 전화번호를 입력해주십시오');
+        $('#orderPhone').focus();
+        return;
+      }
+
+      $.ajax({
+        type: "POST",
+        url: "/orders",
+        data: { orderName_give: orderName, orderSelect_give: orderSelect, orderAddress_give: orderAddress, orderPhone_give: orderPhone },
+        success: function (response) {
+          if (response['result'] == 'success') {
+            alert(response['msg']);
+            window.location.reload();
+          }
+        }
+      })
+    }
+
+    function listing() {
+      $.ajax({
+        type: "GET",
+        url: "/orders",
+        data: {},
+        success: function (response) {
+          if (response['result'] == 'success') {
+            let orders = response['orders'];
+            for (let i = 0; i < orders.length; i++) {
+              make_list(orders[i]['orderName'], orders[i]['orderSelect'], orders[i]['orderAddress'], orders[i]['orderPhone']);
+            }
+          } else {
+            alert('주문정보를 받아오지 못했어요!');
+          }
+        }
+      })
+    }
+
+    function make_list(orderName, orderSelect, orderAddress, orderPhone) {
+      let temp_html = `<tr>
+                        <td>${orderName}</td>
+                        <td>${orderSelect}</td>
+                        <td>${orderAddress}</td>
+                        <td>${orderPhone}</td>
+                    </tr>`;
+      $('#orders-box').append(temp_html);
+    }
+
+  </script>
+</head>
+
+<body>
+  <div class="card-img"></div>
+  <br>
+  <div class="input_body">
+    <span style="font-weight: bold; font-size: 30px;">Blythe 인형 </span> 가격: KRW29,900
+    <p> 날이면 날마다 오는 세일이 아님, 지금 당장 주문하십시오 하하하</p>
+
+    <p><span id="currency" style="font-weight: bold; color: blue;">달러-원 환율 : </span></p>
+
+    <span style="font-weight: bold; font-size: 30px;">주문하기</span>
+
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="inputGroup-sizing-default">주문자 성함</span>
+      </div>
+      <input type="text" id="orderName" class="form-control" aria-label="Sizing example input"
+        aria-describedby="inputGroup-sizing-default">
+    </div>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <label class="input-group-text" for="inputGroupSelect01">수량</label>
+      </div>
+      <select class="custom-select" id="inputGroupSelect01">
+        <option value="" selected>수량을 선택하세요</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="inputGroup-sizing-default">주소</span>
+      </div>
+      <input type="text" id="orderAddress" class="form-control" aria-label="Sizing example input"
+        aria-describedby="inputGroup-sizing-default">
+    </div>
+    <div class="input-group mb-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="inputGroup-sizing-default">전화번호</span>
+      </div>
+      <input type="text" id="orderPhone" class="form-control" aria-label="Sizing example input"
+        aria-describedby="inputGroup-sizing-default">
+    </div>
+    <div class="order-box">
+      <button onclick="orderItem()" type="button" class="btn btn-primary">주문하기</button>
+    </div>
+    <div class="orders">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">이름</th>
+            <th scope="col">수량</th>
+            <th scope="col">주소</th>
+            <th scope="col">전화번호</th>
+          </tr>
+        </thead>
+        <tbody id="orders-box">
+          <tr>
+            <td>Mark</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
+</html>
